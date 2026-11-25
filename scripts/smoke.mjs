@@ -1,0 +1,12 @@
+process.loadEnvFile(new URL('../.env.local', import.meta.url));
+const { load } = await import('../lib/api.js');
+const m = await import('../lib/metrics.js');
+const t = Date.now();
+const { p, ds, users, filtered } = await load({ range: process.argv[2] || '30d' });
+console.log('ms', Date.now() - t, new Date(p.from).toISOString(), new Date(p.to).toISOString());
+console.log(ds.audit); console.log(m.kpis(users, ds.payments, filtered));
+console.table(m.funnel(users).map(({ id, users: n, ofTop, fromPrev, drop }) => ({ id, n, ofTop, fromPrev, drop })));
+for (const e of m.experiments(users)) console.log(e.name, e.assigned, e.sources.join(), e.variants.map((v) => `${v.variant}${v.labels.length ? `(${v.labels})` : ''}: a${v.assigned} s${v.onboarding} c${v.checkout} p${v.payers} ₹${v.revenue} conf${v.conflicted}`).join(' | '));
+console.table(m.groupRollup(users, (u) => u.firstTouch.channel).map(({ key, visitors, onboarding, checkout, payments, revenue }) => ({ key, visitors, onboarding, checkout, payments, revenue })));
+console.table(ds.payments.filter((x) => x.status === 'success').map((x) => ({ d: new Date(x.ts).toISOString().slice(0, 16), amt: x.amount, svc: x.service, match: x.match || x.reason })));
+console.table(m.groupRollup(users, (u) => u.firstLanding).sort((a, b) => b.visitors - a.visitors).slice(0, 25).map(({ key, visitors, onboarding, checkout, payments }) => ({ key, visitors, onboarding, checkout, payments })));
