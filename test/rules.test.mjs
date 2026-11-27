@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from '../lib/taxonomy.js';
 import { buildUser, matchPayment, prepHits, reducePayments, resolveIdentity } from '../lib/journeys.js';
-import { experiments, funnel, rollup } from '../lib/metrics.js';
+import { applyFilters, experiments, funnel, rollup } from '../lib/metrics.js';
 import { assertQe } from '../lib/config.js';
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/156.0.0.0 Safari/537.36';
@@ -87,6 +87,24 @@ test('variant revenue ignores payments before assignment and for other services'
   const u = user([hit('1.1000000000', `${QE}/tm`, 1e6)], { events: [e(2e6)], payments: [pay(1e6, '78', 5), pay(3e6, '248', 7), pay(4e6, '78', 11)] });
   const [x] = experiments([u]);
   assert.equal(x.variants[0].revenue, 11); assert.equal(x.variants[0].payers, 1);
+});
+
+test('variant revenue and the user row count only the experiment pages', () => {
+  // assigned on /ad-company-registration-india, later pays for the same service from /ad-company-registration too
+  const IN = `${QE}/ad-company-registration-india`; const AD = `${QE}/ad-company-registration`;
+  const e = { _t: 1e6, eventTime: 1e6, eventName: 'ab_experiment_assigned', serviceId: 1, url: IN, eventProperties: { onboardingExperiment: 'IN-EXP', onboardingDesign: 'v2' } };
+  const lead = (url, t, ticketId) => hit('1.1000000000', url, t, { navigation: 'cart', ticketId, serviceId: 1 });
+  const pay = (ts, ticketId, amount) => ({ status: 'success', ts, serviceId: '1', ticketId, amount });
+  const u = user([hit('1.1000000000', IN, 0.9e6), hit('1.1000000000', `${QE}/trademark-registration`, 5e6), hit('1.1000000000', AD, 9e6), lead(AD, 9.1e6, 4540239), hit('1.1000000000', IN, 12e6), lead(IN, 12.1e6, 4540241)],
+    { events: [e], payments: [pay(9.5e6, '4540239', 3499), pay(12.5e6, '4540241', 999)] });
+  const [x] = experiments([u]);
+  assert.deepEqual(x.pages, ['/ad-company-registration-india']);
+  assert.equal(x.variants[0].payments, 1); assert.equal(x.variants[0].revenue, 999);
+  assert.equal(x.lastActivity, 12.5e6);
+  const [row] = applyFilters([u], { model: 'visit', experiment: 'IN-EXP', variant: 'v2' });
+  assert.equal(row.revenue, 999); assert.equal(row.convertingLanding, '/ad-company-registration-india'); assert.equal(row.firstLanding, '/ad-company-registration-india');
+  assert.equal(row.assignments[0].experiment, 'IN-EXP');
+  assert.equal(applyFilters([u], { model: 'visit', experiment: 'IN-EXP', variant: 'v1' }).length, 0);
 });
 
 test('QE guard refuses production', () => {
