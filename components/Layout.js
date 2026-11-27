@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { Icon, Link, MODELS, MODEL_HINT, STAGE, day, useApi, useFilters } from './ui.js';
 import Picker from './Picker.js';
+import ChatBot from './ChatBot.js';
 
 const NAV = [['/', 'Overview', 'home'], ['/attribution', 'Attribution', 'megaphone'], ['/landing-pages', 'Landing Pages', 'page'], ['/funnels', 'Funnels', 'funnel'], ['/experiments', 'Experiments', 'flask'], ['/users', 'Users', 'users'], ['/revenue', 'Revenue', 'rupee']];
 const FOOT = [['/data-health', 'Data Health', 'shield'], ['/help', 'Help', 'help']];
@@ -56,9 +57,9 @@ export default function Layout({ title, sub, hello, children, after, alerts, fil
   const link = ([p, l, i]) => <Link key={p} href={f.href(p)} className={isOn(p) ? 'on' : ''} aria-current={isOn(p) ? 'page' : undefined}><Icon n={i} />{l}</Link>;
   const env = f.globals.env === 'all'; const bots = f.globals.bots === 'include'; const model = f.globals.model || '';
   return <div className="shell">
-    <Head><title>{`${title} · Zolvit Attribution (QE)`}</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 38'%3E%3Cpath d='M2 14C2 6 8 2 34 1c1 10 0 18-5 24-4 5-9 8-16 8C5 33 2 24 2 14z' fill='%230f8f80'/%3E%3C/svg%3E" /><meta name="robots" content="noindex" /><meta name="viewport" content="width=device-width, initial-scale=1" /></Head>
+    <Head><title>{`${title} · Zolvit Attribution (QE)`}</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 38'%3E%3Cpath d='M2 14C2 6 8 2 34 1c1 10 0 18-5 24-4 5-9 8-16 8C5 33 2 24 2 14z' fill='%23400f8f'/%3E%3C/svg%3E" /><meta name="robots" content="noindex" /><meta name="viewport" content="width=device-width, initial-scale=1" /></Head>
     <aside className={`side ${open ? 'open' : ''}`}><div className="side-in">
-      <div className="side-top"><div className="brand"><svg width="36" height="38" viewBox="0 0 36 38" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop stopColor="#0a776e" /><stop offset="1" stopColor="#5fdcc0" /></linearGradient></defs><path d="M2 14C2 6 8 2 34 1c1 10 0 18-5 24-4 5-9 8-16 8C5 33 2 24 2 14z" fill="url(#lg)" /><path d="M5 32C7 22 14 13 27 8" stroke="#d8fff3" strokeWidth="2" fill="none" strokeLinecap="round" opacity=".7" /></svg><div><b>Zolvit</b><small>Attribution &amp;<br />Funnel Analytics</small></div></div>
+      <div className="side-top"><div className="brand"><div className="logos"><img src="/logos/zolvit.png" alt="Zolvit, formerly Vakilsearch" width="120" height="39" /></div><small>Attribution &amp;<br />Funnel Analytics</small></div>
         <button className="burger" onClick={() => setOpen(!open)} aria-expanded={open}>Menu</button></div>
       <div className="navs" style={{ display: undefined }}><nav className="nav" aria-label="Main">{NAV.map(link)}</nav></div>
       <div className="quote">Every payment<br />has a first click.<br />Trace it here.</div>
@@ -77,5 +78,6 @@ export default function Layout({ title, sub, hello, children, after, alerts, fil
       {children}
     </main>
     {after && <div className="full">{after}</div>}
+    <ChatBot context={{ page: r.pathname, title, ...f.globals, filters: f.dims }} />
   </div>;
 }
