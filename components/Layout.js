@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
-import { Icon, Link, STAGE, day, useApi, useFilters } from './ui.js';
+import { Icon, Link, MODELS, MODEL_HINT, STAGE, day, useApi, useFilters } from './ui.js';
 
 const NAV = [['/', 'Overview', 'home'], ['/attribution', 'Attribution', 'megaphone'], ['/landing-pages', 'Landing Pages', 'page'], ['/funnels', 'Funnels', 'funnel'], ['/experiments', 'Experiments', 'flask'], ['/users', 'Users', 'users'], ['/revenue', 'Revenue', 'rupee']];
 const FOOT = [['/data-health', 'Data Health', 'shield'], ['/help', 'Help', 'help']];
@@ -52,7 +52,7 @@ export default function Layout({ title, sub, hello, children, after, alerts, fil
   useEffect(() => { setTerm(r.pathname === '/users' ? String(r.query.q || '') : ''); setOpen(false); }, [r.asPath]); // eslint-disable-line react-hooks/exhaustive-deps
   const isOn = (p) => (p === '/' ? r.pathname === '/' : r.pathname.startsWith(p));
   const link = ([p, l, i]) => <Link key={p} href={f.href(p)} className={isOn(p) ? 'on' : ''} aria-current={isOn(p) ? 'page' : undefined}><Icon n={i} />{l}</Link>;
-  const env = f.globals.env === 'all'; const bots = f.globals.bots === 'include'; const last = f.globals.model === 'last';
+  const env = f.globals.env === 'all'; const bots = f.globals.bots === 'include'; const model = f.globals.model || '';
   return <div className="shell">
     <Head><title>{`${title} · Zolvit Attribution (QE)`}</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 38'%3E%3Cpath d='M2 14C2 6 8 2 34 1c1 10 0 18-5 24-4 5-9 8-16 8C5 33 2 24 2 14z' fill='%230f8f80'/%3E%3C/svg%3E" /><meta name="robots" content="noindex" /><meta name="viewport" content="width=device-width, initial-scale=1" /></Head>
     <aside className={`side ${open ? 'open' : ''}`}><div className="side-in">
@@ -70,7 +70,7 @@ export default function Layout({ title, sub, hello, children, after, alerts, fil
             {scope && <div className="menu"><button className={!env ? 'on' : ''} onClick={() => f.set({ env: '' })}>QE hosts only</button><button className={env ? 'on' : ''} onClick={() => f.set({ env: 'all' })}>All hosts (with localhost)</button><button className={bots ? 'on' : ''} onClick={() => f.set({ bots: bots ? '' : 'include' })}>{bots ? 'Including crawlers' : 'Include crawlers'}</button></div>}</div></div>
       </div>
       <header className="head"><div>{hello && <p>{hello}</p>}<h1>{title}</h1><div className="sub">{sub}</div></div>
-        <div className="head-r"><DateRange f={f} /><div className="head-b">{filters && <button className={`pillbtn ${showF ? 'on' : ''}`} aria-expanded={showF} onClick={() => setShowF(!showF)}><Icon n="funnel" s={14} />Filters{Object.keys(f.dims).length ? ` (${Object.keys(f.dims).length})` : ''}</button>}{!hideScope && <button className="pillbtn" onClick={() => f.set({ model: last ? '' : 'last' })} title="Attribution model for source, campaign and landing page">{last ? 'Last touch' : 'First touch'}</button>}</div></div></header>
+        <div className="head-r"><DateRange f={f} /><div className="head-b">{filters && <button className={`pillbtn ${showF ? 'on' : ''}`} aria-expanded={showF} onClick={() => setShowF(!showF)}><Icon n="funnel" s={14} />Filters{Object.keys(f.dims).length ? ` (${Object.keys(f.dims).length})` : ''}</button>}{!hideScope && <select className="pillbtn" aria-label="Attribution model" value={model} title={MODEL_HINT[model]} onChange={(e) => f.set({ model: e.target.value })}>{MODELS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>}</div></div></header>
       {filters && (showF || Object.keys(f.dims).length > 0) && <FilterBar f={f} dims={dims} />}
       {children}
     </main>

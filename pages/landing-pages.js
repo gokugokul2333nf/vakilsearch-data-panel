@@ -27,7 +27,7 @@ export default function LandingPages() {
     <Card title="Landing page performance" sub="Click a page for its funnel, campaigns, variants and users">
       <Load q={q} h={360} empty={(d) => !d.total}>{(d) => <><Table {...s} sort={s.sort || 'visitors'} rows={d.rows} rowKey={(x) => x.key} onRow={(x) => r.push({ pathname: '/landing-pages', query: { ...f.globals, ...f.dims, landing: x.key } })}
         cols={[...perfCols({ k: 'key', l: 'Landing page' }).slice(0, 2), { k: 'views', l: 'Page views', r: 1, f: (x) => nf(x.views) }, ...perfCols({}).slice(2, 6), { k: 'onboardingRate', l: 'To onboarding', r: 1, f: (x) => pc(x.onboardingRate) }, { k: 'conversion', l: 'To payment', r: 1, f: (x) => pc(x.conversion) }, { k: 'dropRate', l: 'Drop-off', r: 1, f: (x) => pc(x.dropRate) }]} /><Pager d={d} set={f.set} /></>}</Load>
-      <p className="note">Visitors = users whose {f.globals.model === 'last' ? 'last attributed' : 'first'} landing was this page. Page views count every deduplicated view, including by people who landed elsewhere.</p>
+      <p className="note">{!f.globals.model ? 'Visitors = users with a landing visit on this page. Leads, checkouts and payments count here only when they came from that visit (the ticket created on this page, else the same visit), so a person who left a lead on one page and paid on another is counted on both, with the payment only on the page it came from.' : `Visitors = users whose ${f.globals.model === 'last' ? 'last attributed' : 'first'} landing was this page.`} Page views count every deduplicated view, including by people who landed elsewhere.</p>
     </Card>
   </Layout>;
 }

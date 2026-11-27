@@ -1,4 +1,5 @@
 import { handler, load, loadPrev, paginate, sortRows } from '../../lib/api.js';
+import { NO_LANDING } from '../../lib/journeys.js';
 import { delta, kpis, landingOf, payRow, series, touch } from '../../lib/metrics.js';
 
 export default handler(async (q) => {
@@ -9,8 +10,10 @@ export default handler(async (q) => {
   const ok = all.filter((x) => x.status === 'success');
   const by = (fn) => { const m = new Map(); for (const x of ok) { const k = fn(x) || '(unknown)'; const r = m.get(k) || { key: k, payments: 0, revenue: 0 }; r.payments += 1; r.revenue += x.amount || 0; m.set(k, r); } return [...m.values()].map((r) => ({ ...r, revenue: Math.round(r.revenue) })).sort((a, b) => b.revenue - a.revenue); };
   const via = (f) => (x) => { const u = byId.get(x.person); return u ? f(u) : 'Unattributed payment'; };
+  // under 'visit' a payment is credited to its own landing visit, not to the person's first page
+  const tp = (f) => (x) => { const u = byId.get(x.person); if (!u) return 'Unattributed payment'; if (p.f.model !== 'visit') return f({ attr: touch(u, p.f.model), page: landingOf(u, p.f.model) }); return f(x.landing ? { attr: x.landing.attr, page: x.landing.key } : { attr: u.convertingTouch, page: NO_LANDING }); };
   const dims = {
-    channel: by(via((u) => touch(u, p.f.model).channel)), source: by(via((u) => `${touch(u, p.f.model).source} / ${touch(u, p.f.model).medium}`)), campaign: by(via((u) => touch(u, p.f.model).campaign || '(none)')), landing: by(via((u) => landingOf(u, p.f.model))),
+    channel: by(tp((t) => t.attr.channel)), source: by(tp((t) => `${t.attr.source} / ${t.attr.medium}`)), campaign: by(tp((t) => t.attr.campaign || '(none)')), landing: by(tp((t) => t.page)),
     service: by((x) => (x.service ? `${x.service}` : x.serviceId ? `Service ${x.serviceId}` : '')), gateway: by((x) => x.gateway),
     variant: by(via((u) => u.assignments.map((a) => `${a.experiment} · ${a.variant}`)[0] || '(no experiment)')),
   };

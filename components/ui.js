@@ -17,6 +17,10 @@ const STAGE_TAG = { landing: 'grey', start: 'blue', progress: 'blue', complete: 
 export const StageTag = ({ s }) => <span className={`tag ${STAGE_TAG[s] ?? 'grey'}`}>{STAGE[s] || s}</span>;
 const PAY_TAG = { success: '', failed: 'red', pending: 'amber', 'not attempted': 'grey', none: 'grey' };
 export const PayTag = ({ s }) => <span className={`tag ${PAY_TAG[s] ?? 'grey'}`}>{s === 'none' ? 'No checkout' : s}</span>;
+// '' = landing visit (Mixpanel-like default): every payment is credited to the visit that produced it
+export const MODELS = [['', 'Landing visit'], ['first', 'First touch'], ['last', 'Last touch']];
+export const MODEL_HINT = { '': 'Each payment and stage belongs to the landing visit that produced it', first: 'Everything is credited to the earliest page ever seen', last: 'Everything is credited to the last campaign visit before the first payment' };
+export const modelLabel = (g) => (MODELS.find(([v]) => v === (g.model || ''))?.[1] || 'Landing visit');
 export const userLabel = (u) => (u.uuids?.length === 1 ? u.uuids[0].slice(0, 13) : `GA ${u.id}`);
 
 // ---------- data ----------

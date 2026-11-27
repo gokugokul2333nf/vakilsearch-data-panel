@@ -30,6 +30,9 @@ node scripts/scenarios.mjs   # needs the dev server; walks real users for each Q
 | Payment status | `test_payway_transaction_logs` | `status` | Yes |
 | Amount, transaction id | `test_payway_native_pg_logs` | `amount` (Razorpay in paise), `mihpayid` / `id` | Yes |
 | Payment ↔ journey | both | payment id in checkout URL, `ticketId` | Yes |
+| Payment ↔ landing page | user-track | `ticketId` on the lead row (`navigation = cart`), whose `url` is the page with the form | Yes |
+| Landing saved on the lead | payment registry | `metadata.landing.url / referrer / ts` | Not yet: see [docs/tracking-spec.md](docs/tracking-spec.md) |
+| Visit id | user-track | `sessionId` | Not yet: visits are split by 30 min inactivity until it exists |
 | QE Postgres | – | `pg_hba.conf` rejects this machine's IP | Not used |
 | Mixpanel | – | account blocked for non-payment, 23 Nov 2026 | Not used |
 
@@ -39,7 +42,8 @@ node scripts/scenarios.mjs   # needs the dev server; walks real users for each Q
 - **Identity** (`lib/journeys.js resolveIdentity`): person = GA client id. Browsers merge only when each used exactly one account UUID and it is the same one. Shared browsers stay separate and are flagged. IP is never used.
 - **Payment match** (`matchPayment`): payment id on the success page, then on checkout, then a ticket seen by exactly one person. Otherwise unattributed.
 - **Revenue**: gateway `success` rows only, one per payment request, gateway amount.
-- **First touch** is the earliest row ever, also before the range. **Last touch** is the last non-direct entry before the first payment.
+- **Landing visit** (default model, Mixpanel-like): each landing page visit is an attempt, and each lead, checkout and payment belongs to the attempt that produced it (`lib/journeys.js buildAttempts`). Payment → landing page: `metadata.landing` saved on the lead, else the visit that created the payment's ticket, else the visit of its checkout, else the last landing within 30 days. A visit ends after 30 min idle, a new `sessionId`, or a new campaign / outside referrer; a lead on a second page in the same visit starts a new attempt. A direct visit carries the last campaign within 30 days. Grouped reports count a person once per group with only that group's stages and payments (`lib/metrics.js groupTouches / project`), so revenue adds up.
+- **First touch** is the earliest row ever, also before the range. **Last touch** is the last non-direct entry before the first payment. Both credit the person as a whole; pick them from the model menu.
 - **Variant**: first recorded assignment wins (90-day lookback). Only later actions count; checkout and revenue only for services or tickets named by that experiment's events.
 - **Funnel**: closed cohort of people who landed in range; stages count at or after that landing. Assignment, progress and completion are optional stages.
 - **Dedupe**: same person, page and kind within 5 s is one view. Sessions split at 30 min.

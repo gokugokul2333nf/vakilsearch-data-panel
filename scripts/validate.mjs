@@ -31,6 +31,8 @@ for (const range of ['7d', '30d', 'month']) {
   check('unique visitors (before UUID merges)', k.visitors + ds.audit.mergedBrowsers, people.size);
   check('users who landed (before UUID merges)', k.landed + ds.audit.mergedBrowsers, landed.size);
   check('revenue split by landing page adds up', m.groupRollup(users, (u) => u.firstLanding).reduce((s, x) => s + x.revenue, 0) + k.unattributedRevenue, k.revenue);
+  check('revenue split by landing visit adds up', m.groupTouches(users, 'visit', (t) => t.page).reduce((s, x) => s + x.revenue, 0) + k.unattributedRevenue, k.revenue);
+  check('revenue split by visit channel adds up', m.groupTouches(users, 'visit', (t) => t.attr.channel).reduce((s, x) => s + x.revenue, 0) + k.unattributedRevenue, k.revenue);
   check('users split by channel add up', m.groupRollup(users, (u) => u.firstTouch.channel).reduce((s, x) => s + x.visitors, 0), k.visitors);
   const f = m.funnel(users).filter((x) => x.core); check('core funnel never increases', f.every((x, i) => !i || x.users <= f[i - 1].users), true);
 }
