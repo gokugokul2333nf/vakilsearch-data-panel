@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { Icon, Link, MODELS, MODEL_HINT, STAGE, day, useApi, useFilters } from './ui.js';
+import Picker from './Picker.js';
 
 const NAV = [['/', 'Overview', 'home'], ['/attribution', 'Attribution', 'megaphone'], ['/landing-pages', 'Landing Pages', 'page'], ['/funnels', 'Funnels', 'funnel'], ['/experiments', 'Experiments', 'flask'], ['/users', 'Users', 'users'], ['/revenue', 'Revenue', 'rupee']];
 const FOOT = [['/data-health', 'Data Health', 'shield'], ['/help', 'Help', 'help']];
@@ -28,6 +29,7 @@ function DateRange({ f }) {
       <div className="dates"><label><span className="sr">From</span><input type="date" value={c.from} onChange={(e) => setC({ ...c, from: e.target.value })} /></label><label><span className="sr">To</span><input type="date" value={c.to} onChange={(e) => setC({ ...c, to: e.target.value })} /></label><button className="go" disabled={bad} onClick={() => { f.set({ range: 'custom', ...c }); setOpen(false); }}>Apply custom range</button></div></div>}</div>;
 }
 
+const NOUN = { channel: 'channels', source: 'sources', medium: 'mediums', campaign: 'campaigns', landing: 'landing pages', service: 'services', device: 'devices', experiment: 'experiments', variant: 'variants', stage: 'stages', pay: 'payment states', term: 'terms', content: 'contents' };
 const DIM_LABEL = { channel: 'Channel', source: 'Source', medium: 'Medium', campaign: 'Campaign', landing: 'Landing page', service: 'Service', device: 'Device', experiment: 'Experiment', variant: 'Variant', stage: 'Last stage', reached: 'Reached', pay: 'Payment', term: 'Term', content: 'Content' };
 export function FilterBar({ f, dims = ['channel', 'source', 'medium', 'campaign', 'landing', 'service', 'device', 'experiment'] }) {
   const q = useApi(f.ready ? '/api/filters' : null, f.globals);
@@ -36,7 +38,7 @@ export function FilterBar({ f, dims = ['channel', 'source', 'medium', 'campaign'
   const list = f.dims.experiment && dims.includes('experiment') ? [...dims, 'variant'] : dims;
   return <div className="filters">
     {list.map((k) => (f.dims[k] ? <span className="chip" key={k}><span>{DIM_LABEL[k]}: {opts[k]?.find?.((x) => x.v === f.dims[k])?.l || f.dims[k]}</span><button aria-label={`Clear ${DIM_LABEL[k]}`} onClick={() => f.set(k === 'experiment' ? { experiment: '', variant: '' } : { [k]: '' })}><Icon n="x" s={13} /></button></span>
-      : <select key={k} className="pillbtn" aria-label={DIM_LABEL[k]} value="" onChange={(e) => f.set({ [k]: e.target.value })}><option value="">{DIM_LABEL[k]}</option>{(opts[k] || []).map((x) => <option key={x.v} value={x.v}>{x.l || x.v}{x.c != null ? ` (${x.c})` : ''}</option>)}</select>))}
+      : <Picker key={k} label={DIM_LABEL[k]} options={q.data ? opts[k] || [] : undefined} onPick={(x) => f.set({ [k]: x.v })} split={k === 'landing'} noun={NOUN[k]} />))}
     {Object.keys(f.dims).filter((k) => !list.includes(k)).map((k) => <span className="chip" key={k}><span>{DIM_LABEL[k]}: {f.dims[k]}</span><button aria-label={`Clear ${DIM_LABEL[k]}`} onClick={() => f.set({ [k]: '' })}><Icon n="x" s={13} /></button></span>)}
     {Object.keys(f.dims).length > 0 && <button className="pillbtn" onClick={() => f.set(Object.fromEntries(Object.keys(f.dims).map((k) => [k, ''])))}>Clear all</button>}
   </div>;
