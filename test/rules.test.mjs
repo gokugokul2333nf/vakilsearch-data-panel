@@ -105,6 +105,8 @@ test('variant revenue and the user row count only the experiment pages', () => {
   assert.equal(row.revenue, 999); assert.equal(row.convertingLanding, '/ad-company-registration-india'); assert.equal(row.firstLanding, '/ad-company-registration-india');
   assert.equal(row.assignments[0].experiment, 'IN-EXP');
   assert.equal(applyFilters([u], { model: 'visit', experiment: 'IN-EXP', variant: 'v1' }).length, 0);
+  assert.equal(experiments([u], { landing: '/ad-company-registration-india' }).length, 1);
+  assert.equal(experiments([u], { landing: '/ad-tm-registration' }).length, 0);
 });
 
 test('QE guard refuses production', () => {

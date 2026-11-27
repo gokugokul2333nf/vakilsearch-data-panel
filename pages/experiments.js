@@ -10,7 +10,8 @@ export default function Experiments() {
   const [vs, setVs] = useState('');
   const name = f.query.exp;
   return <Layout title="A/B Experiments" sub="Found in recorded assignments. The first variant a user got is kept to the end." dims={['channel', 'source', 'landing', 'service', 'device']}>
-    <Load q={q} h={300} empty={(d) => !d.rows.length}>{(d) => {
+    <Load q={q} h={300}>{(d) => {
+      if (!d.rows.length) return <div className="empty">{d.landing ? <>No experiment found for <b>{d.landing}</b> in this range. Experiments whose page was not recorded are not listed for a page.</> : 'No experiment assignments in this range.'}</div>;
       const e = d.rows.find((x) => x.name === name) || d.rows[0];
       const v = e.variants.find((x) => x.variant === vs) || e.variants[0];
       const small = e.variants.some((x) => x.assigned < 100);
