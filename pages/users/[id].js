@@ -9,6 +9,7 @@ const Attr = ({ a }) => <>{[`${a.source} / ${a.medium}`, a.campaign && `campaign
 export default function User() {
   const f = useFilters(); const r = useRouter();
   const [view, setView] = useState('key');
+  const [allIds, setAllIds] = useState(false);
   const q = useApi(f.ready ? `/api/users/${encodeURIComponent(r.query.id)}` : null, {});
   return <Layout title="User Journey" sub={<span className="mono">GA {r.query.id}</span>} filters={false} hideScope>
     <Load q={q} h={500}>{({ user: u, payments, timeline, truncated }) => {
@@ -21,7 +22,7 @@ export default function User() {
             <dl className="kv"><dt>{paid ? 'Result' : 'Last seen at'}</dt><dd>{paid ? `Paid ${inr(u.revenue)}` : STAGE[u.stage]}{!paid && <small style={{ display: 'block', color: 'var(--mute)' }}>{u.exitConfirmed ? 'Confirmed: an exit event was the last thing recorded' : 'Inferred from the last recorded activity, not a confirmed exit'}</small>}</dd><dt>Payment</dt><dd><PayTag s={u.payStatus} /></dd><dt>Last page</dt><dd>{u.lastPage}</dd><dt>Last activity</dt><dd>{dt(u.lastTs)}</dd><dt>Sessions</dt><dd>{nf(u.sessions)} · {nf(u.pageViews)} page views</dd><dt>Device</dt><dd>{u.device}</dd></dl>
           </Card>
           <Card title="Identity">
-            <dl className="kv"><dt>Account UUID</dt><dd className="mono">{u.uuids.length ? u.uuids.map((x) => <div key={x}>{x}</div>) : 'None yet: no checkout on record'}</dd><dt>GA client id</dt><dd className="mono">{u.gas.join(', ')}</dd><dt>Tickets</dt><dd className="mono">{u.tickets.length ? u.tickets.slice(-12).join(', ') : 'None'}{u.tickets.length > 12 ? ` +${u.tickets.length - 12} older` : ''}</dd><dt>Services</dt><dd>{u.services.join(', ') || '–'}</dd></dl>
+            <dl className="kv"><dt>Account UUID</dt><dd className="mono">{u.uuids.length ? <>{(allIds ? u.uuids : u.uuids.slice(0, 4)).map((x) => <div key={x} className="uuid" title={x}>{x}</div>)}{u.uuids.length > 4 && <button className="more" onClick={() => setAllIds(!allIds)}>{allIds ? 'Show less' : `+${u.uuids.length - 4} more accounts`}</button>}</> : 'None yet: no checkout on record'}</dd><dt>GA client id</dt><dd className="mono">{u.gas.join(', ')}</dd><dt>Tickets</dt><dd className="mono">{u.tickets.length ? u.tickets.slice(-12).join(', ') : 'None'}{u.tickets.length > 12 ? ` +${u.tickets.length - 12} older` : ''}</dd><dt>Services</dt><dd>{u.services.join(', ') || '–'}</dd></dl>
             {u.shared && <p className="note">This browser checked out with {u.uuids.length} accounts, so it may be more than one person. They are not merged with other browsers.</p>}
           </Card>
           <Card title="Attribution">

@@ -95,5 +95,5 @@ export function FunnelTable({ rows, onPick }) {
   const tip = useTip();
   return <div className="fun">{rows.map((r) => <div key={r.id} className={`f ${r.core === false ? 'opt' : ''}`} onClick={() => onPick?.(r)} style={{ cursor: onPick ? 'pointer' : 'default' }} {...tip([r.label, `${nf(r.users)} unique users`, `${pc(r.ofTop)} of the top stage`, ...(r.fromPrev != null ? [`${pc(r.fromPrev)} of ${r.prevLabel}`, `${nf(r.drop)} not seen here (${pc(r.dropPct)})`] : [])])}>
     <div className="lb">{r.label}{r.core === false && <small>optional stage</small>}</div><div className="tr"><i style={{ width: `${r.ofTop || 0}%` }} /></div>
-    <div className="mt num"><b>{nf(r.users)}</b><span>{pc(r.ofTop)}</span><span>{r.fromPrev != null ? `${pc(r.fromPrev)} of prev · −${nf(r.drop)} (${pc(r.dropPct)})` : ''}</span></div></div>)}</div>;
+    <div className="mt num"><b>{nf(r.users)}</b><span>{pc(r.ofTop)}</span><span>{r.fromPrev != null ? (r.drop ? `${pc(r.fromPrev)} of prev · −${nf(r.drop)} (${pc(r.dropPct)})` : `${pc(r.fromPrev)} of prev`) : ''}</span></div></div>)}</div>;
 }
